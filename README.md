@@ -11,10 +11,10 @@ NeurIPS '22
 In case you use code provided here, please cite as:
 ```bibtex
 @inproceedings{Graf22a,
-    author = {Graf, F. and Zeng, S. and Rieck, B. and Niethammer, M. and Kwitt, R.},
-    title = {Measuring Excess Capacity in Neural Networks},
+    author    = {Graf, F. and Zeng, S. and Rieck, B. and Niethammer, M. and Kwitt, R.},
+    title     = {Measuring Excess Capacity in Neural Networks},
     booktitle = {NeurIPS},
-    year = 2022}
+    year      = 2022}
 ```
 *The artwork used is licensed from Sniggle Sloth.*
 
