@@ -1,3 +1,4 @@
+import os
 import json
 import torch
 import torch.nn as nn
@@ -96,34 +97,34 @@ def get_ds_and_dl(ds_name: str,
     
     if ds_name == 'cifar10':
         ds_trn = datasets.CIFAR10(
-            data_dir, 
+            os.path.join(data_dir, ds_name), 
             train=True, 
             download=True, 
             transform=trn_transforms)
         ds_tst = datasets.CIFAR10(
-            data_dir, 
+            os.path.join(data_dir, ds_name), 
             train=False, 
             download=True, 
             transform=tst_transforms)
     elif ds_name == 'cifar100':
         ds_trn = datasets.CIFAR100(
-            data_dir, 
+            os.path.join(data_dir, ds_name), 
             train=True, 
             download=True, 
             transform=trn_transforms)
         ds_tst = datasets.CIFAR100(
-            data_dir, 
+            os.path.join(data_dir, ds_name), 
             train=False, 
             download=True, 
             transform=tst_transforms)
     elif ds_name == 'tiny-imagenet-200':
         ds_trn = TinyImageNetDataset(
-            'tiny-imagenet-200/',
+            os.path.join(data_dir, ds_name),
             mode='train', 
             preload=True, 
             transform=trn_transforms)
         ds_tst = TinyImageNetDataset(
-            'tiny-imagenet-200/',
+            os.path.join(data_dir, ds_name),
             mode='val', 
             preload=True, 
             transform=tst_transforms)
@@ -133,7 +134,9 @@ def get_ds_and_dl(ds_name: str,
     num_classes = len(ds_trn.classes)
     
     if randomize:
-        with open('{}_rand.json'.format(ds_name), 'r') as fp:
+        if ds_name not in ['cifar10', 'cifar100']:
+            raise NotImplementedError('Dataset {} not supported for randomization'.format(ds_name))
+        with open(os.path.join(data_dir, '{}_rand.json'.format(ds_name)), 'r') as fp:
             random_labels = json.load(fp)
             ds_trn.targets = random_labels['ds_trn.targets']
             ds_tst.targets = random_labels['ds_tst.targets']    
@@ -169,8 +172,7 @@ def compute_margins(inp: Tensor, tgt: Tensor) -> torch.Tensor:
 
 
 class RampLoss(nn.Module):
-    """
-    Class to implement the ramp loss as in 
+    """Implements the ramp loss as defined in 
 
     Bartlett, Forster, Telgarsky
     Spectrally-normalized margin bounds for neural networks
@@ -184,8 +186,8 @@ class RampLoss(nn.Module):
     """
     def __init__(self, gamma: float=1.0):
         """
-        Parameters
-        ----------
+        Arguments
+        ---------
             gamma: float (default: 1.0)
                 the \gamma parameter of the ramp loss    
         """

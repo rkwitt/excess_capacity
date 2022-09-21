@@ -8,17 +8,25 @@ from . import cyclicpad
 
 class Dysktra(object):
     """
-    Implements Dykstra's projection algorithm.
-    Iterative algorithm. Given a list of orthogonal projections
-    onto convex sets, it converges to the orthogonal projection
-    onto the intersectio (if nonempty); see
-        P. L. Combettes and J.-C. Pesquet, 
-        "Proximal splitting methods in signal processing" 
-        In: Fixed-Point Algorithms for Inverse Problems in Science and Engineering 
-        pp. 185–212. 
-        Springer, New York, 2011 
+    Implements Dykstra's (iterative) projection algorithm. Given a list of orthogonal projections
+    onto convex sets, it converges to the orthogonal projection onto the intersection (if nonempty).
+    For reference, see
+    
+    Combettes, P. L. and Pesquet J.-C.  
+    "Proximal splitting methods in signal processing" 
+    In: Fixed-Point Algorithms for Inverse Problems in Science and Engineering 
+    pp. 185–212. 
+    Springer, New York, 2011 
     """
-    def __init__(self, projections: list):        
+    
+    def __init__(self, projections: list): 
+        """Initialize with list of callable projection objects.
+
+        Arguments
+        ---------
+            projections: list
+                list of callable projection objects (i.e., LipProj | ProjOnPlane | DistProj)
+        """       
         self.projections = projections
 
     def __call__(self, x: torch.Tensor, n_iter: int = 10):
@@ -32,17 +40,24 @@ class Dysktra(object):
 
 
 class Halpern(object):
+    """Implements Halpern's Iteration method. Given a list of orthogonal projections
+    onto convex sets, it converges to the orthogonal projection onto the intersection 
+    (if nonempty); for reference, see
+    
+    Bauschke H. H.
+    "The Approximation of Fixed Points of Compositions of Nonexpansive Mappings in Hilbert Space",
+    In: Journal of Mathematical Analysis and Applications v202 
+    pp. 150-159
+    1996
     """
-    Implements Halpern's Iteration method.
-    Iterative algorithm. Given a list of orthogonal projections
-    onto convex sets, it converges to the orthogonal projection
-    onto the intersection (if nonempty); see
-        H. H. Bauschke, 
-        "The Approximation of Fixed Points of Compositions of Nonexpansive Mappings in Hilbert Space",
-        In: Journal of Mathematical Analysis and Applications v202 pp. 150-159.
-        1996
-    """
-    def __init__(self, projections: list):        
+    def __init__(self, projections: list):
+        """Initialize with list of callable projection objects.
+
+         Arguments
+        ---------
+            projections: list
+                list of callable projection objects (i.e., LipProj | ProjOnPlane | DistProj)
+        """          
         self.projections = projections
         self.coeff = lambda n: 1/(1+n)
 
@@ -56,17 +71,23 @@ class Halpern(object):
 
 
 class AlternatingProjections(object):
-    """
-    
-    """
-    def __init__(self, projections: list):        
+    """Implements a trivial alternating projections method."""
+
+    def __init__(self, projections: list):
+        """Initialize with list of callable projection objects.
+
+         Arguments
+        ---------
+            projections: list
+                list of callable projection objects (i.e., LipProj | ProjOnPlane | DistProj)
+        """
         self.projections = projections
 
     def __call__(self, x: torch.Tensor, n_iter: int = 10):
         anchor = x.detach().clone()
         for i in range(n_iter * len(self.projections)):
             proj = self.projections[i % len(self.projections)]
-            x =  proj(x)
+            x = proj(x)
         return x
 
 
@@ -168,18 +189,20 @@ class LipProj(object):
         elif self.mode =='radial':
             return self._radial_projection(x)
 
+
 class ProjOnPlane(object):
-    """
-    Projects a tensor of size (a0,...,a3) on the hyperplane of 
+    """Implements projecting a tensor of size (a0,...,a3) onto the hyperplane of 
     tensors whose last a0-b0,...,a3-b3 coordinates are zero.
     """
-    def __init__(self, plane: list): 
+
+    def __init__(self, plane: list):
         self.plane = plane
         #self.mask = embed_plane(torch.ones(plane), in_dim)
-        
+
     def __call__(self, x: torch.Tensor) -> torch.Tensor:
         mask = embed_plane(torch.ones(self.plane, device=x.device), x.shape)
         return x * mask
+
 
 class DistProj(object):
     def __init__(self, r: float, x0: torch.Tensor = None, n_iter: int = 100, mode: str = 'orthogonal'):
@@ -294,21 +317,6 @@ def bisect(f, a, b, n_iter=1000):
     return c
 
 
-def test_lipschitz(f,dims, device = 'cuda:2', lr =100., n_iter=10000):
-    # Absurdly large learning rate required for calculating the lipschitz
-    # constant of multi channel (e.g. 64) convolution
-
-    x = torch.randn(dims, device=device, requires_grad=True)
-    optimizer = torch.optim.SGD([x], lr=100.)
-    for _ in range(n_iter):
-        optimizer.zero_grad()
-        fx = f(x)
-        lip = -fx.norm()/x.norm()
-        lip.backward()
-        optimizer.step()
-    return -lip
-
-
 def power_it(W: torch.Tensor, n_iter: int):
     v = torch.randn(*W.shape[:-2], W.shape[-1], dtype=W.dtype).to(W.device)
     v = F.normalize(v, dim=-1)
@@ -321,6 +329,7 @@ def power_it(W: torch.Tensor, n_iter: int):
     
     s = torch.einsum('...i,...ij,...j->...', u.conj(), W, v).abs()
     return u.unsqueeze(0), s.unsqueeze(0), v.unsqueeze(0)
+
 
 def get_singular_values(W: torch.Tensor, r: float = 1e-12, n_iter=100):
     tmp = W.detach().clone()
