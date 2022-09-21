@@ -1,7 +1,6 @@
 ![Logo](assets/cat.png)
 -----------------------
 
-
 This is the **official repository** for the NeurIPS '22 paper
 
 F. Graf, S. Zeng, B. Rieck, M. Niethammer and R. Kwitt    
@@ -17,6 +16,7 @@ In case you use code provided here, please cite as:
     booktitle = {NeurIPS},
     year = 2022}
 ```
+*The artwork used is licensed from Sniggle Sloth.*
 
 ## Overview
 
