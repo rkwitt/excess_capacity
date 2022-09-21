@@ -59,16 +59,16 @@ print('Desired Lipschitz constant: {:0.2f}'.format(layer.lipC))
 print('Computed Lipschitz constant: {}'.format(layer.lipC()))
 ```
 
-Taking the definition of the Lipschitz constant, we can easily write down a small optimization problem where we seek to identify vectors $\mathbf{x}, \mathbf{y}$ that maximize
+Taking the definition of the Lipschitz constant, we can easily write down a small optimization problem where we seek to identify vectors $\mathbf{x}, \mathbf{y} \in \mathbb{R}^n$ that maximize
 
 $$
--\frac{\|f(\mathbf{x})-f(\mathbf{y})\|_2}{\| \mathbf{x}-\mathbf{y}\|_2}
+-\frac{\lVert f(\mathbf{x})-f(\mathbf{y})\rVert_2}{\lVert \mathbf{x}-\mathbf{y}\rVert_2}
 $$
 
-where $f$ denotes the function implemented by the `ConstrainedLinear` layer. This works, because $f$ is $K$-Lipschitz continuous ($K>0$) if
+where $f$ denotes the function implemented by the `ConstrainedLinear` layer. This works, because $f$ is $K$-Lipschitz continuous if
 
 $$
-\forall \mathbf{x},\mathbf{y} \in \mathbb{R}^n: \frac{\|f(\mathbf{x})-f(\mathbf{y})\|_2}{\| \mathbf{x}-\mathbf{y}\|_2} \leq K
+\forall \mathbf{x},\mathbf{y} \in \mathbb{R}^n: \frac{\lVert f(\mathbf{x})-f(\mathbf{y})\rVert_2}{\lVert \mathbf{x}-\mathbf{y}\rVert_2} \leq K
 $$
 
 This gives an *empirical assessment* of whether our layer enforces the desired Lipschitz constraint. A unit test for this case can be found in `tests/test_layers.py` (`TestConstrainedLinear`). An equivalent test for the `ConstrainedConv2d` layer is implemented in  `tests/test_layers.py` (`TestConstrainedConv2d`).
