@@ -128,27 +128,31 @@ mkdir log
 screen -S ipys
 tenorboard --logdir log
 ```
-and then specifying `log` as the logging folder via `--logdir log`.
-As an example, consider 
+and then specifying `log` as the logging folder via `--logdir log`. As an example, consider training our variant of a  PreAct-Resnet18 model with a `SimplexClassifier`. In our implementation, we control the Lipschitz constaint and (2,1)-group norm distance constraint to a layers initialization for
+
+1. the initial convolution layer (`conv1` in `PreActResNet`), 
+2. the layers in each residual block, 
+3. the shortcut, and 
+4. the classifier (i.e., the final map of the network). 
+    
+In general, this yields a total of **eight** (2 $\times$ 4) constraints that need to be set. ]\ it is only six, as the shortcut implementation from the paper (via max-pooling) is a fixed map. The command-line arguments which control the constraints are `--lip` and `--dist`. For instance `--lip 2.0 1.0 1.0 1.0` sets the Lipschitz constraint for the initial convolutional layer in the residual network to $2.0$, the Lipschitz constraints for each layer within the residual blocks to $1.0$ and the Lipschitz constraint for the classifier to $1.0$ as well. Similarly, `--dist 90. 90. 90. 0` would set the corresponding (2,1)-group norm distance to initialization constraints. Note here that the last value is $0$ which selects the `SimplexClassifier` (i.e., a fixed map). On CIFAR10 with $C=10$ classes, the Lipschitz constant of this fixed classifier would be $\sqrt\frac{10}{9}=1.111$ and our choice of  `--lip 2.0 1.0 1.0 1.0` from above would scale the weights accordingly (using the largest singular value) to achieve the desired Lipschitz constraint of $1.0$ (last value for `--lip`). Below is a pretty self-explanatory call to `train.py` for a run on CIFAR10 (using SGD per default):
 
 ```python
-python train.py \
-    --bs 256 \
-    --lip 2.0 1.0 1.0 1.0 \
-    --dist -1 -1 -1 0 \
-    --device cuda:0 \
-    --lr .03 \
-    --comment simple_convnet6_cifar10 \
-    --epochs 200 \
-    --n_proj 1 \
-    --proj_freq 10 \
-    --datadir data/cifar10 \
-    --dataset cifar10 \
-    --arch simple_convnet6 \
-    --n_channels  256
+python train.py --bs 256 \
+    --lip 2.0 0.8 1.4 1.0 \ # see paragraph above
+    --dist 90 90 90 0 \     # see paragraph above
+    --device cuda:0  \      # run on cuda:0 device
+    --comment testing \     # comment for tensorboard
+    --epochs 200 \          # train for 200 epochs
+    --n_proj 1 \            # perform one iteration of alternating proj.
+    --proj_freq 15 \        # project every 15th optimizer step
+    --datadir data \        # folder where cifar10 dataset resides
+    --dataset cifar10 \     # cifar10 dataset
+    --lr .003 \             # learning rate
+    --logdir log
 ```
 
-which trains a `simple_convnet6` (with 256 channels) with a fixed `SimplexClassifier` (Lipschitz constraint of $1.0$) and no distance to initialization constraint on CIFAR10, using SGD with learning rate set to 0.03 and a batch size of 256 for 200 epochs.
+The training progress (train/test loss & error) as well as logging of the current contraints per layer are then visualized in the tensorboard. In similar manner, we can train on `cifar100` or `tiny-imagenet-200`.
 
 ### Evaluation notebooks
 
