@@ -18,6 +18,9 @@ class ConstrainedLinear(nn.Linear):
     of a (2,1)-group norm distance constraint to the initial weight of 
     the map, or (3) in the form of both.
 
+    Caution: currently the Lipschitz constraint can only be enforced if 
+    stride=1!
+
     Attributes
     ----------
         lipC: float
@@ -268,7 +271,7 @@ class ConstrainedConv2d(nn.Conv2d):
         return dist.item()
     
     def _initialize(self, input: torch.Tensor):
-        """Initialize layer by instantiating a bit of bookkeeping."""
+        """Initialize layer by doing a bit of bookkeeping."""
         with torch.no_grad():
             out = self._conv_forward(input, self.weight, self.bias)       
             self.inp_dims = input.shape 
@@ -348,7 +351,7 @@ class ConstrainedConv2d(nn.Conv2d):
 class PoolingShortcut(nn.Module):
     """Implementation of shortcut connection via pooling.
     
-    Note: Input to init is never used but required for calling the class 
+    Note: Input to __init__ is never used, but required for calling the class 
     consistently to conv1x1 (as done in the original PyTorch ResNet implementation).
     """
     def __init__(

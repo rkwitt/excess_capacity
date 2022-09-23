@@ -1,3 +1,4 @@
+log/
 config.ini
 __pycache__
 .ipynb_checkpoints

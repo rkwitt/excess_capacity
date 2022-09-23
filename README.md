@@ -8,7 +8,7 @@ F. Graf, S. Zeng, B. Rieck, M. Niethammer and R. Kwitt
 NeurIPS '22    
 [arXiv](https://arxiv.org/abs/2202.08070)
 
-In case you use code provided here, please cite as:
+In case you use code provided in this repository, please cite as:
 ```bibtex
 @inproceedings{Graf22a,
     author    = {Graf, F. and Zeng, S. and Rieck, B. and Niethammer, M. and Kwitt, R.},
@@ -16,7 +16,7 @@ In case you use code provided here, please cite as:
     booktitle = {NeurIPS},
     year      = 2022}
 ```
-*The artwork used is licensed from Sniggle Sloth.*
+*The artwork (cat) used is licensed from Sniggle Sloth.*
 
 ## Overview
 
@@ -121,7 +121,15 @@ The main training code can be found in [`train.py`](train.py). Using
 ```python
 python train.py --help
 ```
-displays the description of all command-line parameters. As an example, consider 
+displays the description of all command-line parameters. At the moment, almost all logging is handeled via tensorboard. Hence, to monitor any progress, we recommend a setup like 
+
+```bash
+mkdir log
+screen -S ipys
+tenorboard --logdir log
+```
+and then specifying `log` as the logging folder via `--logdir log`.
+As an example, consider 
 
 ```python
 python train.py \
