@@ -152,6 +152,7 @@ class LipProj(object):
         the operator norm ball with a specified radius. Supports fully connected layers 
         and convolutional layers with circular padding and kernel size equal to the 
         input dimensions. see 
+
             Sedghi, Gupta & Long
             The Singular Values of Convolutional Layers
             https://arxiv.org/pdf/1805.10408.pdf
@@ -176,7 +177,7 @@ class LipProj(object):
 
     def _get_lipschitz(self, x: torch.Tensor) -> torch.Tensor:
         if self.input_type == 'conv':
-            #TODO get outdims, indims
+            # TODO get outdims, indims
             u, lip, v = cyclicpad.cyclic_power_iteration(x, **self.radial_params)
             self.radial_params['us'] = u
         elif self.input_type == 'fc':
@@ -205,17 +206,22 @@ class ProjOnPlane(object):
 
 
 class DistProj(object):
-    def __init__(self, r: float, x0: torch.Tensor = None, n_iter: int = 100, mode: str = 'orthogonal'):
+    def __init__(self,
+                 r: float,
+                 x0: torch.Tensor = None,
+                 n_iter: int = 100,
+                 mode: str = 'orthogonal'):
         assert r > 0., 'r={}, but r > 0 required'.format(r)
-        assert mode in ['orthogonal', 'radial'], 'Mode {} not implemented'.format(mode)
+        assert mode in ['orthogonal',
+                        'radial'], 'Mode {} not implemented'.format(mode)
         self.r = r
         self.x0 = x0
         self.n_iter = n_iter
         self.mode = mode
 
     def __call__(self, x: torch.Tensor):
-        if self.x0 == None: 
-            self.x0 = torch.zeros_like(x)    
+        if self.x0 == None:
+            self.x0 = torch.zeros_like(x)
         delta = x - self.x0
         if delta.norm(dim=1, p=2).norm(p=1) <= self.r:
             delta_proj = delta
@@ -227,8 +233,9 @@ class DistProj(object):
         return delta_proj + self.x0
 
     def _orthogonal_projection(self, x: torch.Tensor) -> torch.Tensor:
-        """
+        """Orthogonal projection onto (2,1)-group norm constraint set. 
         see
+
         Liu, Ji & Ye 
         Multi-Task Feature Learning Via Efficient 2,1-Norm Minimization
         https://arxiv.org/pdf/1205.2631.pdf
@@ -265,17 +272,17 @@ def embed_plane(x: torch.tensor, shape: list) -> torch.Tensor:
 
 
 def conv_power_it(W: torch.Tensor,
-                inp_dims: list,
-                out_dims: list,
-                us: torch.Tensor = None,
-                kernel_size: int = 3,
-                stride: int = 1,
-                padding: int = 1,
-                n_iter: int = 25):
+                  inp_dims: list,
+                  out_dims: list,
+                  us: torch.Tensor = None,
+                  stride: int = 1,
+                  padding: int = 1,
+                  n_iter: int = 25):
     eps = 1e-12
     output_padding = inp_dims[-1] - ((out_dims[-1]-1)*stride-2*padding+1*(W.shape[-1]-1)+1)
     if inp_dims[-1] == 2:
         output_padding = 0
+
     #no grad required to avoid memory leaks
     with torch.no_grad():
         if us == None:
@@ -297,17 +304,19 @@ def conv_power_it(W: torch.Tensor,
         weight_v = F.conv2d(v, W, bias=None, stride=stride, padding=padding)
         weight_v = weight_v.view(-1)
         sigma = torch.dot(u.view(-1), weight_v)
+
     return u, sigma, v
 
 
 def bisect(f, a, b, n_iter=1000):
-    assert torch.sign(f(a))!=torch.sign(f(b)), "invalid signs, fa = {} fb = {}".format(f(a), f(b))
-    eps=1e-8
+    assert torch.sign(f(a)) != torch.sign(
+        f(b)), "invalid signs, fa = {} fb = {}".format(f(a), f(b))
+    eps = 1e-8
     c = (a+b)/2
     fc = f(c)
     i = 0
-    while abs(fc)>eps and i< n_iter: 
-        i+=1
+    while abs(fc) > eps and i < n_iter:
+        i += 1
         c = (a+b)/2
         fc = f(c)
         if torch.sign(fc) == torch.sign(f(a)):
@@ -320,13 +329,13 @@ def bisect(f, a, b, n_iter=1000):
 def power_it(W: torch.Tensor, n_iter: int):
     v = torch.randn(*W.shape[:-2], W.shape[-1], dtype=W.dtype).to(W.device)
     v = F.normalize(v, dim=-1)
-    
-    for _ in range(n_iter):    
+
+    for _ in range(n_iter):
         us = torch.einsum('...ij,...j->...i', W, v)
         u = F.normalize(us, dim=-1)
         vs = torch.einsum('...ji,...j->...i', W.conj(), u)
         v = F.normalize(vs, dim=-1)
-    
+
     s = torch.einsum('...i,...ij,...j->...', u.conj(), W, v).abs()
     return u.unsqueeze(0), s.unsqueeze(0), v.unsqueeze(0)
 
@@ -334,10 +343,11 @@ def power_it(W: torch.Tensor, n_iter: int):
 def get_singular_values(W: torch.Tensor, r: float = 1e-12, n_iter=100):
     tmp = W.detach().clone()
     u, s, v = power_it(tmp, n_iter)
-    while s[-1].max()>r:
-        tmp = tmp - torch.einsum('...i,...,...j->...ij', u[-1], s[-1], v[-1].conj())
+    while s[-1].max() > r:
+        tmp = tmp - torch.einsum('...i,...,...j->...ij',
+                                 u[-1], s[-1], v[-1].conj())
         u_i, s_i, v_i = power_it(tmp, n_iter)
-        u = torch.cat((u,u_i),dim=0)
-        s = torch.cat((s,s_i),dim=0)
-        v = torch.cat((v,v_i),dim=0)
+        u = torch.cat((u, u_i), dim=0)
+        s = torch.cat((s, s_i), dim=0)
+        v = torch.cat((v, v_i), dim=0)
     return u, s, v.conj()

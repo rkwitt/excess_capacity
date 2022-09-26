@@ -240,7 +240,6 @@ class ConstrainedConv2d(nn.Conv2d):
                 self.inp_dims, 
                 self.out_dims, 
                 u, 
-                self.kernel_size[-1], 
                 self.stride[-1], 
                 self.padding[-1], 
                 n_iter = n_iter
@@ -251,7 +250,6 @@ class ConstrainedConv2d(nn.Conv2d):
                 self.inp_dims, 
                 self.out_dims, 
                 u, 
-                self.kernel_size[-1], 
                 self.stride[-1], 
                 self.padding[-1], 
                 n_iter = n_iter
@@ -297,7 +295,6 @@ class ConstrainedConv2d(nn.Conv2d):
                 'inp_dims': self.inp_dims,
                 'out_dims': self.out_dims,
                 'us': None,
-                'kernel_size': self.kernel_size[0],
                 'padding': self.padding[0],
                 'n_iter': 10
             }
@@ -311,15 +308,17 @@ class ConstrainedConv2d(nn.Conv2d):
             if self.proj_mode == 'radial':
                 self.embed = lambda x: x
             else:
-                self.embed = lambda x: projections.embed_plane(x, 
-                    self.weight.shape[:2] + self.inp_dims[2:])
+                self.embed = lambda x: projections.embed_plane(x,
+                                                               self.weight.shape[:2] + self.inp_dims[2:])
 
-            self.dstProj = projections.DistProj(
-                self.dstC, 
-                self.embed(self.init_weight), 
-                mode = self.proj_mode)
+            self.dstProj = projections.DistProj(self.dstC,
+                                                self.embed(self.init_weight),
+                                                mode=self.proj_mode)
             self.clip = projections.ProjOnPlane(self.weight.shape)
-            self.lipProj = projections.LipProj(self.lipC, input_type='conv', mode=self.proj_mode, radial_params = self.radial_params)
+            self.lipProj = projections.LipProj(self.lipC,
+                                               input_type='conv',
+                                               mode=self.proj_mode,
+                                               radial_params=self.radial_params)
             self.is_initialized = True   
 
     def project(self, n_iter = 10) -> None:
