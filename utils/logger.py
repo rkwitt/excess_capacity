@@ -1,5 +1,8 @@
 """Logging"""
 
+
+__all__ =  ['report_progress', 'report_status', 'report_warning', 'report_error']
+
 import logging
 from termcolor import colored
 
@@ -14,5 +17,8 @@ def report_status(s):
     logger.info(colored(s, 'blue'))
 
 def report_warning(s):
+    logger.warning(colored(s, 'yellow'))
+
+def report_error(s):
     logger.warning(colored(s, 'red'))
 

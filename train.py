@@ -1,4 +1,4 @@
-"""Main training/evaluation code."""
+"""Main training/evaluation code"""
 
 import os
 import sys
@@ -15,7 +15,7 @@ from torch.optim import SGD, Adam
 from torch.optim.lr_scheduler import CosineAnnealingLR, MultiStepLR
 from torch.utils.tensorboard import SummaryWriter
 
-from utils.logger import report_progress, report_status, report_warning
+from utils.logger import *
 from utils.misc import get_ds_and_dl, compute_margins
 from models.nostride_preact_resnet import nostride_preactresnet18
 from models.simple_convnet import simple_convnet6, simple_convnet11
@@ -26,74 +26,74 @@ def setup_argparse():
     """Setup command-line parsing"""
 
     parser = argparse.ArgumentParser()
-    parser.add_argument("--lip",  
-                        nargs=4, 
-                        help="Lipschitz constraint in format: conv1, in block, shortcut, classifer", 
-                        type=float, 
+    parser.add_argument("--lip",
+                        nargs=4,
+                        help="Lipschitz constraint in format: conv1, in block, shortcut, classifer",
+                        type=float,
                         default=[-1, -1, -1, -1])
-    parser.add_argument("--dist", 
-                        nargs=4,  
-                        help="Distance constraint in format: conv1, in block, shortcut, classifier", 
-                        type=float, 
+    parser.add_argument("--dist",
+                        nargs=4,
+                        help="Distance constraint in format: conv1, in block, shortcut, classifier",
+                        type=float,
                         default=[-1, -1, -1, -1])
-    parser.add_argument("--n_proj", 
-                        help="Number of alternating projections", 
-                        type=int, 
-                        default=1) 
-    parser.add_argument("--proj_freq", 
-                        help="Number of training batches after which the projection is applied", 
-                        type=int, 
+    parser.add_argument("--n_proj",
+                        help="Number of alternating projections",
+                        type=int,
+                        default=1)
+    parser.add_argument("--proj_freq",
+                        help="Number of training batches after which the projection is applied",
+                        type=int,
                         default=15)
-    parser.add_argument("--bs", 
-                        help="Batch size", 
-                        type=int, 
+    parser.add_argument("--bs",
+                        help="Batch size",
+                        type=int,
                         default=256)
-    parser.add_argument("--epochs", 
-                        help="Number of training epochs", 
-                        type=int, 
+    parser.add_argument("--epochs",
+                        help="Number of training epochs",
+                        type=int,
                         default=100)
-    parser.add_argument("--lr", 
-                        help="Learning rate", 
-                        type=float, 
+    parser.add_argument("--lr",
+                        help="Learning rate",
+                        type=float,
                         default=0.003)
-    parser.add_argument("--wd", 
-                        help="Weight decay", 
-                        type=float, 
+    parser.add_argument("--wd",
+                        help="Weight decay",
+                        type=float,
                         default=1e-4)
-    parser.add_argument("--momentum", 
-                        help="Momentum", 
-                        type=float, 
+    parser.add_argument("--momentum",
+                        help="Momentum",
+                        type=float,
                         default=.9)
-    parser.add_argument("--device", 
-                        help="Device to run on, e.g., cuda:0", 
-                        type=str, 
+    parser.add_argument("--device",
+                        help="Device to run on, e.g., cuda:0",
+                        type=str,
                         default='cuda:0')
-    parser.add_argument("--comment", 
-                        help="Comment for tensorboard", 
-                        type=str, 
+    parser.add_argument("--comment",
+                        help="Comment for tensorboard",
+                        type=str,
                         default='')
-    parser.add_argument("--limit_to", 
-                        help="Limit training to N samples", 
-                        type=int, 
+    parser.add_argument("--limit_to",
+                        help="Limit training to N samples",
+                        type=int,
                         default=-1)
-    parser.add_argument("--n_power_it", 
-                        help="Number of iterations for computing Lipschitz constant", 
-                        type=int, 
+    parser.add_argument("--n_power_it",
+                        help="Number of iterations for computing Lipschitz constant",
+                        type=int,
                         default=20)
     parser.add_argument('--logdir',
-                        help="Directory for tensorboard logs", 
-                        type=str, 
-                        default = None)
+                        help="Directory for tensorboard logs",
+                        type=str,
+                        default=None)
     parser.add_argument('--datadir',
-                        help="Data directory", 
-                        type=str, 
-                        default = '/tmp/data')
-    parser.add_argument('--bn', 
-                        help="Use batch normalization", 
-                        type=bool, 
-                        default = False)
-    parser.add_argument('--rand', 
-                        help="Randomize training labels (works for --dataset cifar10 | cifar100)", 
+                        help="Data directory",
+                        type=str,
+                        default='/tmp/data')
+    parser.add_argument('--bn',
+                        help="Use batch normalization",
+                        type=bool,
+                        default=False)
+    parser.add_argument('--rand',
+                        help="Randomize training labels (works for --dataset cifar10 | cifar100)",
                         action="store_true",
                         default=False)
     parser.add_argument('--dataset',
@@ -108,25 +108,25 @@ def setup_argparse():
                         default='orthogonal')
     parser.add_argument('--save_model',
                         help='Models (@epochs 0 and epochs) will be saved to logdir',
-                        dest='save_model', 
+                        dest='save_model',
                         action='store_true',
                         default=False)
     parser.add_argument('--arch',
                         help='Architecture of the model',
                         choices=['no_stride_preactresnet18',
-                                 'simple_convnet6', 
+                                 'simple_convnet6',
                                  'simple_convnet11'],
-                        type = str,
+                        type=str,
                         default='no_stride_preactresnet18')
     parser.add_argument('--optimizer',
                         help='Optimizer to use; for adam, --momentum and --wd are unused!',
                         choices=['sgd', 'adam', 'lars', 'lamb'],
-                        type = str,
+                        type=str,
                         default='sgd')
     # The following arguments only apply to simple_convnet
     parser.add_argument('--n_channels',
                         help='Defines the number of channels of each layer of simple_convnetX',
-                        type = int,
+                        type=int,
                         default=512)
 
     args = parser.parse_args()
@@ -217,14 +217,17 @@ def main():
         if args.lip[i]==-1:
             args.lip[i] = np.inf
     print(args)
-    
+
     if args.logdir is None:
-        log_dir = os.path.join('runs/{:}/lip_{:}__dist_{:}'.format(args.comment,args.lip,args.dist),datetime.now().strftime('%b%d_%H-%M-%S') + '_' + socket.gethostname())
+        log_dir = os.path.join('runs/{:}/lip_{:}__dist_{:}'.format(
+            args.comment,
+            args.lip,
+            args.dist), datetime.now().strftime('%b%d_%H-%M-%S') + '_' + socket.gethostname())
     else: 
         log_dir = args.logdir
 
     writer = SummaryWriter(log_dir=log_dir)
-    pickle.dump(args, open(os.path.join(log_dir, 'args.pkl'), "wb" ))
+    pickle.dump(args, open(os.path.join(log_dir, 'args.pkl'), "wb"))
 
     ds_trn, ds_tst, dl_trn, dl_tst, num_classes = get_ds_and_dl(args.dataset,
                                                                 args.datadir,
@@ -260,21 +263,15 @@ def main():
         torch.save(model.state_dict(),
                    os.path.join(log_dir, 'model_0.pt'))
 
-    if args.optimizer == 'sgd':
-        optimizer = SGD(model.parameters(),
-                        lr=args.lr,
-                        weight_decay=args.wd,
-                        momentum=args.momentum)
-    elif args.optimizer == 'adam':
-        optimizer = Adam(model.parameters(),
-                         lr=args.lr)
-    elif args.optimizer == 'lars':
-        optimizer = LARS(model.parameters(),
-                         lr=args.lr,
-                         momentum=args.momentum)
-    elif args.optimizer == 'lamb':
-        optimizer = LAMB(model.parameters(),
-                         lr=args.lr)
+    try:
+        optimizer = {
+            'sgd':   SGD(model.parameters(), lr=args.lr, weight_decay=args.wd, momentum=args.momentum),
+            'adam':  Adam(model.parameters(), lr=args.lr),
+            'lars':  LARS(model.parameters(), lr=args.lr, momentum=args.momentum),
+            'lamb':  LAMB(model.parameters(), lr=args.lr)
+        }[args.optimizer]
+    except KeyError:
+        report_error('Optimizer {} not supported!'.format(args.optimizer))
 
     if args.arch in ["simple_convnet"+str(i) for i in [6, 11]] + ["nostride_simple_convnet"+str(i) for i in [6, 11]]:
         scheduler = CosineAnnealingLR(optimizer,

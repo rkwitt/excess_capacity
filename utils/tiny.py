@@ -1,4 +1,4 @@
-"""This is an adaptation of code TinyImageNet loading/processing code from 
+"""This is an adaptation of Tiny-ImageNet-200 loading/processing code from 
 
 https://gist.github.com/z-a-f/b862013c0dc2b540cf96a123a6766e54
 """
@@ -13,7 +13,7 @@ from torch.utils.data import Dataset
 def _add_channels(img, total_channels=3):
     while len(img.shape) < 3:  # third axis is the channels
         img = np.expand_dims(img, axis=-1)
-    while(img.shape[-1]) < 3:
+    while (img.shape[-1]) < 3:
         img = np.concatenate([img, img[:, :, -1:]], axis=-1)
     return img
 
@@ -133,7 +133,7 @@ class TinyImageNetDataset(Dataset):
             img = np.array(imageio.imread(s[0]))
             img = _add_channels(img)
             lbl = None if self.mode == 'test' else s[self.label_idx]
-        
+
         if self.transform:
             img = self.transform(img)
         return img, lbl

@@ -1,3 +1,7 @@
+"""Miscelaneous methods and classes"""
+
+__all__ = ['get_ds_stat', 'get_ds_and_dl', 'compute_margins', 'RampLoss']
+
 import os
 import json
 import torch
@@ -14,14 +18,11 @@ from torch.nn.functional import normalize, conv_transpose2d, conv2d
 from .tiny import TinyImageNetDataset
 
 
-__all__ = ['get_ds_stat', 'get_ds_and_dl', 'compute_margins', 'RampLoss']
-
-
 def get_ds_stat(ds_name: str = 'cifar10') -> Tuple[Tuple,Tuple]:
-    """Get dataset mean, std dev. statistics
+    """Get image dataset mean, std dev. statistics per channel
     
-    Parameters
-    ----------
+    Arguments
+    ---------
     ds_name: str 
         the name of the image dataset, i.e., either 
             'cifar10',
@@ -160,6 +161,32 @@ def get_ds_and_dl(ds_name: str,
 
 
 def compute_margins(inp: Tensor, tgt: Tensor) -> torch.Tensor:
+        """Computes the negative of the margin operator
+        
+        M(v,y) = v_y - max_{i \neq y} v_i
+        
+        from Sec. 3.1 of
+
+        Bartlett, Forster, Telgarsky
+        Spectrally-normalized margin bounds for neural networks
+        NeurIPS 2017
+        arXiv: https://arxiv.org/abs/1706.08498
+
+        where y \in {1,...,K} and v \in R^K.
+
+        Arguments
+        ---------
+            inp: torch.Tensor of shape (B,K)
+                Typically the O-dimensional output of a network before any 
+                softmax (B=batch size)
+            tgt: torch.Tensor of shape (B,)
+                Target labels for each instance in the batch of size B
+        
+        Returns
+        -------
+            out: torch.Tensor of size (B,1)
+                Negative of margin operator for each instance in the batch
+        """
         v_y = torch.gather(inp, 1, tgt.unsqueeze(1))
 
         n,d = inp.size()
@@ -172,7 +199,7 @@ def compute_margins(inp: Tensor, tgt: Tensor) -> torch.Tensor:
 
 
 class RampLoss(nn.Module):
-    """Implements the ramp loss as defined in 
+    """Implements the ramp loss as defined in Sec. 3.1 of
 
     Bartlett, Forster, Telgarsky
     Spectrally-normalized margin bounds for neural networks

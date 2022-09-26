@@ -1,3 +1,9 @@
+"""Implementation of layers with Lipschitz and (2,1)-group norm distance 
+to initialization constraint.
+"""
+
+__all__ = ['ConstrainedLinear', 'ConstrainedConv2d', 'SimplexClassifier']
+
 import os
 import numpy as np
 import configparser
@@ -64,23 +70,21 @@ class ConstrainedLinear(nn.Linear):
         
         self.lipC = lip_cond
         self.dstC = dist_cond
-        self.projection_method = projections.Dysktra # currently fixed!
+        self.projection_method = projections.Dysktra  # currently fixed!
         self.proj_mode = proj_mode
         self.is_initialized = False
-        
+
         # initialize default nn.Linear
-        nn.Linear.__init__(
-            self, 
-            in_features, 
-            out_features, 
-            bias=bias,
-            device=device, 
-            dtype=dtype
-        )
+        nn.Linear.__init__(self,
+                           in_features,
+                           out_features,
+                           bias=bias,
+                           device=device,
+                           dtype=dtype)
         
         self.register_buffer("init_weight", None)
         
-    def extra_repr(self):
+    def extra_repr(self) -> str:
         return "in_feature={}, out_features={}, bias={}, lip_cond={}, dist_cond={}".format(
             self.in_features, 
             self.out_features, 
@@ -114,7 +118,7 @@ class ConstrainedLinear(nn.Linear):
         dist = delta.norm(dim=1, p=2).norm(p=1)
         return dist.item()
 
-    def _initialize(self):
+    def _initialize(self) -> None:
         """Initialize constrained linear layer. That is, make sure that the 
         desired Lipschitz constraint is satisfied initially.
         """
@@ -127,7 +131,7 @@ class ConstrainedLinear(nn.Linear):
         self.lipProj = projections.LipProj(self.lipC, input_type='fc')
         self.is_initialized = True
 
-    def project(self, n_iter = 10):
+    def project(self, n_iter: int = 10) -> None:
         """Project to satisfy constraints.
         
         Arguments
@@ -361,7 +365,7 @@ class PoolingShortcut(nn.Module):
         lip_cond=np.inf,
         dist_cond=0,
         proj_mode='orthogonal',
-    ):  
+    ) -> None:  
         super(PoolingShortcut, self).__init__()
         self.lip =  lambda: (2 * torch.ones(1)).sqrt().item()
         self.lipC = (2 * torch.ones(1)).sqrt().item()
@@ -423,12 +427,12 @@ class SimplexClassifier(ConstrainedLinear):
     def dist(self) -> float:
         """Returns the distance to initialization (always 0)"""
         return 0.
-        
-    def project(self, n_iter = 10):
+
+    def project(self, n_iter: int = 10):
         """No need to project here"""
         pass
- 
-    def _initialize(self):
+
+    def _initialize(self) -> None:
         self.is_initialized = True
    
     def forward(self, input: Tensor) -> Tensor:
@@ -460,7 +464,7 @@ class GroupSort(nn.Module):
 
     see https://arxiv.org/abs/1811.05381
     """
-    def forward(self, x):
+    def forward(self, x: Tensor) -> Tensor:
         a, b = x.split(x.size(1) // 2, 1)
         a, b = torch.max(a, b), torch.min(a, b)
         return torch.cat([a, b], dim=1)
