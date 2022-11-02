@@ -52,14 +52,22 @@ Additionally, we provide support for a fixed linear classifier where weights are
 ### ConstrainedLinear
 
 ```python
+import torch
 from core.layers import ConstrainedLinear
 
-layer = ConstrainedLinear(20, 10, lipC=0.8)
+layer = ConstrainedLinear(20, 10, lip_cond=0.6)
 
 x = torch.rand(16,20)
 o = layer(x)
 print('Desired Lipschitz constant: {:0.2f}'.format(layer.lipC))
-print('Computed Lipschitz constant: {}'.format(layer.lipC()))
+print('Computed Lipschitz constant at init: {}'.format(layer.lip()))
+
+eps = 0.1 * torch.randn_like(layer.weight)
+layer.weight.data += eps
+print('Computed Lipschitz constant after perturbation: {}'.format(layer.lip()))
+
+layer.project()
+print('Computed Lipschitz constant after projection: {}'.format(layer.lip()))
 ```
 
 If we would want to quickly test (empirically) whether that layer enforces the Lipschitz constraint, we can do the following: taking the definition of the Lipschitz constant, we write down a small optimization problem where we seek to identify vectors $\mathbf{x}, \mathbf{y} \in \mathbb{R}^n$ that maximize
