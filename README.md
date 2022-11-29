@@ -1,3 +1,6 @@
+*We are currently updating the repository with additional notebooks and tutorials - a final version will be available ASAP after NeurIPS '22.*
+
+
 ![Logo](assets/cat.png)
 -----------------------
 
@@ -18,7 +21,6 @@ In case you use code provided in this repository, please cite as:
 ```
 *The artwork (cat) used is licensed from Sniggle Sloth.*
 
-*We are currently updating the repo with additional notebooks and tutorials - a final version will be available ASAP after NeurIPS '22*
 
 ## Overview
 
