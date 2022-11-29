@@ -18,6 +18,8 @@ In case you use code provided in this repository, please cite as:
 ```
 *The artwork (cat) used is licensed from Sniggle Sloth.*
 
+*We are currently updating the repo with additional notebooks and tutorials - a final version will be available ASAP after NeurIPS '22*
+
 ## Overview
 
 The following sections describe (1) how to use our code to reproduce the experiments of the paper and (2) how to use our constrained layers in your own experiments.
