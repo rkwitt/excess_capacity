@@ -64,24 +64,25 @@ class Bounds:
             number of parameters of each layer
         mat_params: torch.Tensor
             number of parameters the matrices corresponding to the convolutional map would have
-        self.lip = torch.tensor([layer.lip() for layer in self.layers]).type(torch.float64)
 
-        norm22: torch.Tensor
+        lip = list[torch.Tensor]:
+            layerwise lipschitz constants
+        norm22: list[torch.Tensor]
             l2 norms of weight tensors
-        norm21: torch.Tensor
+        norm21: list[torch.Tensor]
             l21 norms of weight tensors
-        matrix_norm21: torch.Tensor
+        matrix_norm21: list[torch.Tensor]
             l21 norms of corresponding matrices, divided by output_dim**2
-        norm1inf: torch.Tensor
+        norm1inf: list[torch.Tensor]
             l1inf norms of weight tensors
 
-        dist22: torch.Tensor
+        dist22: list[torch.Tensor]
             l2 distances to initialization
-        dist21: torch.Tensor
+        dist21: list[torch.Tensor]
             l21 distances to initialization
-        matrix_dist21: torch.Tensor
+        matrix_dist21: list[torch.Tensor]
             l21 distances of corresponding matrices, divided by output_dim**2
-        dist1inf: torch.Tensor
+        dist1inf: list[torch.Tensor]
             l1inf distances of to initialization
 
         bounds: List[str]
@@ -158,7 +159,7 @@ class Bounds:
         Arguments
         ---------
             mode: default | full
-                default mode excludes computation of ledent_main (requires ~ 5 min computation time)
+                default mode excludes computation of ledent_main (the latter requires  more computation time)
         """
 
         if mode == 'default':
