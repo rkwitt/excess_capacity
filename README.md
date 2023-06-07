@@ -1,7 +1,6 @@
 *We are currently updating the repository with additional notebooks and tutorials - a final version will be available ASAP after NeurIPS '22.*
 
 
-![Logo](assets/cat.png)
 <picture>
   <source media="(prefers-color-scheme: dark)" srcset="assets/cat-dark.png">
   <source media="(prefers-color-scheme: light)" srcset="assets/cat-light.png">
