@@ -168,6 +168,7 @@ class ConstrainedConv2d(nn.Conv2d):
             method to use for iterated projections (i.e., when using multiple constraints)
         proj_mode: 'orthogonal' | 'radial'
             how to project onto constraint set
+            radial mode is faster but results in a larger deviation
         is_initialized: bool
             whether the layer is initialized or not
     """
@@ -201,7 +202,8 @@ class ConstrainedConv2d(nn.Conv2d):
                 (2,1)-group norm distance constraint (if np.inf, then no constraint 
                 is enforced)
             proj_mode: 'orthogonal' | 'radial'
-                projection type
+                how to project onto constraint set
+                radial mode is faster but results in a larger deviation
         """   
         self.lipC = lip_cond
         self.dstC = dist_cond

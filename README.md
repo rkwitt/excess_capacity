@@ -64,43 +64,89 @@ Additionally, we provide support for a fixed linear classifier where weights are
 import torch
 from core.layers import ConstrainedLinear
 
-layer = ConstrainedLinear(20, 10, lip_cond=0.6)
+layer = ConstrainedLinear(20, 10, lip_cond=0.6, dist_cond=50)
 
 x = torch.rand(16,20)
 o = layer(x)
-print('Desired Lipschitz constant: {:0.2f}'.format(layer.lipC))
-print('Computed Lipschitz constant at init: {}'.format(layer.lip()))
+print(f'Desired Lipschitz constant: {layer.lipC:0.3f}')
+print(f'Computed Lipschitz constant at init: {layer.lip():0.3f}')
 
 eps = 0.1 * torch.randn_like(layer.weight)
 layer.weight.data += eps
-print('Computed Lipschitz constant after perturbation: {}'.format(layer.lip()))
+print(f'Computed Lipschitz constant after perturbation: {layer.lip():0.3f}')
 
 layer.project()
-print('Computed Lipschitz constant after projection: {}'.format(layer.lip()))
+print(f'Computed Lipschitz constant after projection: {layer.lip():0.3f}')
 ```
 
-If we would want to quickly test (empirically) whether that layer enforces the Lipschitz constraint, we can do the following: taking the definition of the Lipschitz constant, we write down a small optimization problem where we seek to identify vectors $\mathbf{x}, \mathbf{y} \in \mathbb{R}^n$ that maximize
+### ConstrainedConv2D
+
+```python
+  import torch
+  from core.layers import ConstrainedConv2d
+
+  layer = ConstrainedConv2d(3, 8, kernel_size=3, padding=1, lip_cond=0.6, dist_cond=50)
+
+  x = torch.rand(16,3,32,32)
+  o = layer(x)
+  print(f'Desired Lipschitz constant: {layer.lipC:0.3f}')
+  print(f'Computed Lipschitz constant at init: {layer.lip():0.3f}')
+
+  eps = 0.1 * torch.randn_like(layer.weight)
+  layer.weight.data += eps
+  print(f'Computed Lipschitz constant after perturbation: {layer.lip():0.3f}')
+
+  layer.project()
+  print(f'Computed Lipschitz constant after projection: {layer.lip():0.3f}')
+```
+
+If we would want to quickly test (empirically) whether a layer enforces the Lipschitz constraint, we can do the following: taking the definition of the Lipschitz constant, we write down a small optimization problem where we seek to identify vectors $\mathbf{x}, \mathbf{y} \in \mathbb{R}^n$ that maximize
 
 $$
 -\frac{\lVert f(\mathbf{x})-f(\mathbf{y})\rVert_2}{\lVert \mathbf{x}-\mathbf{y}\rVert_2}
 $$
 
-Here, $f$ denotes the function implemented by `ConstrainedLinear`. This works, because $f$ is $K$-Lipschitz continuous if
+Here, $f$ denotes the function implemented by `ConstrainedLinear` or `ConstrainedConv2d`. This works, because $f$ is $K$-Lipschitz continuous if
 
 $$
 \forall \mathbf{x},\mathbf{y} \in \mathbb{R}^n: \frac{\lVert f(\mathbf{x})-f(\mathbf{y})\rVert_2}{\lVert \mathbf{x}-\mathbf{y}\rVert_2} \leq K
 $$
 
-A unit test for this case can be found in `tests/test_layers.py` (`TestConstrainedLinear`). 
-
-### ConstrainedConv2d
-
-tbd.
-
+A unit test for this can be found in `tests/test_layers.py` (`TestConstrainedLinear` and `TestConstrainedConv2d`). 
 
 ### Using layers in your own code
 
-tbd.
+The `ConstrainedLinear` and `ConstrainedConv2d` can easily be integrated in existing code, 
+simply by replacing an `nn.Linear` layer with a `ConstrainedLinear` one. 
+The same holds for `nn.Conv2d` -> `ConstrainedConv2d`.
+By default, the layers are are initialized with a distance and Lipschitz constraint of `np.inf`, i.e.
+no constraints at all.
+
+```python
+  from torch.nn import Linear, ReLU
+  from core.layers import ConstrainedLinear
+
+  # standard 2-layer model
+  model0 = nn.Sequential(
+      Linear(32,8), 
+      ReLU(), 
+      Linear(8,2)
+  )
+
+  # 2-layer model allowing for constraints
+  model = nn.Sequential(
+    ConstrainedLinear(32,8, lip_cond=1.0, dist_cond=50), 
+    ReLU(), 
+    ConstrainedLinear(8,2, lip_cond=1.0, dist_cond=50)
+  )
+
+  print('')
+  print(f"Lipschitz constraint of 1st layer: {model[0].lipC:0.3f}")
+  print(f"Distance constraint of 1st layer: {model[0].dstC:0.3f}")
+```
+
+Importantly, to enforce the constraints during training, each layers projection method `project()` 
+needs to be called after an optimizer step.
 
 ## Models
 
@@ -177,8 +223,3 @@ python train.py --bs 256 \
 ```
 
 The training progress (train/test loss & error) as well as logging of the current contraints per layer are then visualized in the tensorboard. In similar manner, we can train on `cifar100` or `tiny-imagenet-200`.
-
-## Notebooks
-
-
-

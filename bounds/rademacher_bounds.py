@@ -194,7 +194,7 @@ class Bounds:
         norms_term = (C_i**(2/3)).sum()**(3/2)
         params_term = (2*barW).log().sqrt()
 
-        bound = 4/self.n + 9*self.n.log()/self.n.sqrt() * params_term * norms_term
+        bound = 4/self.n + 12*self.n.log()/self.n.sqrt() * params_term * norms_term
         return bound.item()
 
     def ledent_main(self) -> float:
@@ -381,12 +381,14 @@ class Bounds:
         LC_i = self.L * C_i
         W_i = self.params        
 
-        first_summand = 2*W_i * (1+LC_i**2).log()
-        psi = lambda x: 2*x*(torch.pi/2-x.arctan())
-        #take care of numerical instabilities in psi
-        second_summand = psi(LC_i)*(LC_i<1000.).float() + 2*(LC_i>=1000.).float()
+        first_summand = (1+LC_i**2).log()
 
-        bound = 12/self.n.sqrt() * (first_summand+second_summand).sum().sqrt()
+        from scipy.special import zeta
+        psi = lambda x: zeta(3/2, 1)**(1/3) * zeta(3/2, 1+1/x**2)
+        second_summand = psi(LC_i**2)
+        root_term = 2 * W_i * (first_summand + second_summand)
+
+        bound = 12/self.n.sqrt() * (root_term).sum().sqrt()
         return bound.item()
 
     def lin(self) -> float:
