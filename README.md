@@ -2,6 +2,12 @@
 
 
 ![Logo](assets/cat.png)
+<picture>
+  <source media="(prefers-color-scheme: dark)" srcset="assets/cat-dark.png">
+  <source media="(prefers-color-scheme: light)" srcset="assets/cat-light.png">
+  <img alt="Logo" src="assets/cat-dark.png">
+</picture>
+
 -----------------------
 
 This is the **official repository** for the NeurIPS '22 paper

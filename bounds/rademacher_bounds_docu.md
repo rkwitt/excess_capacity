@@ -101,7 +101,7 @@ On init, the following quantities are computed
 
 We consider a hypothesis class $\mathcal F$ represented by a neural network of the form
 $$f = \sigma_L \circ f_L \circ \dots \circ \sigma_1 \circ f_1$$ 
-where $\sigma_i : x \mapsto \max(x, 0)$ denotes the ReLU activation function and $f_i$ identifies a convolutional layer parametrized by the tensor $K_i \in \mathbb R^{c_{i+1} c_i k_i^2}$. Depending on the bound, the layers need to satisfy different constraints. We will denote Lipschitz constraints by $s_i$. Norm/distance constraints will be denoted by the correspondong quanitiy, e.g. $\lVert K_i \rVert_2 should be understood as a contraint on the $l_2$ norm of the tensors $K_i$.
+where $\sigma_i : x \mapsto \max(x, 0)$ denotes the ReLU activation function and $f_i$ identifies a convolutional layer parametrized by the tensor $K_i \in \mathbb R^{c_{i+1} c_i k_i^2}$. Depending on the bound, the layers need to satisfy different constraints. We will denote Lipschitz constraints by $s_i$. Norm/distance constraints will be denoted by the correspondong quanitiy, e.g. $\lVert K_i \rVert_2$ should be understood as a contraint on the $l_2$ norm of the tensors $K_i$.
 
 Note that fully-connected layers, e.g., a linear classifier at the last layer, can be handled by setting the spatial input dimension, the kernel size and the stride all equal to 1.
 
@@ -123,10 +123,10 @@ $$
     \frac{b_{i}}{s_{i}}
 $$
 
-Let $\gamma>0$ and let $H_{n-1}= \sum_{m=1}^{n-1} \frac{1}{m} = \mathcal O(\log(n))$ denote the $(n-1)$-th harmonic number. Then, the empirical Rademacher complexity of $\mathcal F_\gamma$ satisfies 
+Let $\gamma>0$ and let $H_{n-1}= \sum\limits_{m=1}^{n-1} \frac{1}{m} = \mathcal O(\log(n))$ denote the $(n-1)$-th harmonic number. Then, the empirical Rademacher complexity of $\mathcal F_\gamma$ satisfies 
 
-$$       
-        {R}_S({\mathcal F_\gamma})
+$$
+        \mathfrak R_S({\mathcal F_\gamma})
         \le
         \frac{4}{n}
         +
@@ -138,10 +138,11 @@ $$
         \right)^{\!3/2}
     \tag{$\clubsuit$}
 $$
+
 and
+
 $$
-    {
-        {R}_S({\mathcal F_\gamma})
+        \mathfrak R_S({\mathcal F_\gamma})
         \le
         \frac{12}{\sqrt n}
         \sqrt{
@@ -150,10 +151,10 @@ $$
             \log\left(1+\lceil{L ^2 \tilde C_{i}^2}\rceil\right) + 
             \psi\left(\lceil{L \tilde C_{i}}\rceil\right)
         }
-    }
     \enspace, 
     \tag{$\spadesuit$}
 $$
+
 where $\psi$ is a monotonically increasing function, satisfying $\psi(0)=0$ and $\forall x: \psi(x)<2.7$.
 
 ```python
@@ -187,8 +188,9 @@ def ours_params(self) -> float:
 
 The bound from Bartlett et al. is analogous to our first bound ($\clubsuit$). Essentially, it only differs in the definition of the terms $\tilde C_i$ as they do not account for the structure of convolutions. 
 Similarly, the number $W_i$ of parameters will be replaced by $\bar W_i = (c_{i}d_i^2) \cdot(c_{i+1}d_{i+1}^2) =  W_i \frac{d_i^2 d_{i+1}^2}{k_i^2}$, the number of parameters of the corresponding matrix $M_i \in \mathbb R^{c_{i+1}d_{i+1}^2 \times c_{i}d_{i}^2}$. For more details see sections A.1 to A.4 in the paper.
+
 $$
-{R}_S({\mathcal F_\gamma})
+\mathfrak R_S({\mathcal F_\gamma})
         \le
         \frac{4}{n}
         +
@@ -199,7 +201,9 @@ $$
             \tilde C_{i}^{{2}/{3}}
         \right)^{\!3/2}
 $$
+
 with
+
 $$ 
 \tilde C_{i}(X)=
     \frac 4\gamma \, \frac{\lVert X\rVert}{\sqrt{n}} 
@@ -208,7 +212,7 @@ $$
             s_l
     \right)
     \frac{d_{i+1}^2}{k_i}
-    \frac{\lVert K_i-K^{(0)}_i\rVert_{2,1}}{s_{i}}
+    \frac{\lVert K_i-K^{(0)}\_i \rVert_{2,1}}{s_{i}}
 \qquad \text{and} \qquad
 \bar W = \max_i W_i \frac{d_i^2 d_{i+1}^2}{k_i^2} 
 $$
